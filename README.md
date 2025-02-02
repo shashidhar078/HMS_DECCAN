@@ -27,3 +27,94 @@ The **Hospital Management System (HMS)** is a full-stack application designed to
 Clone the project repository to your local machine:
 ```bash
 git clone <your-repository-url>
+
+Here’s the content converted into Markdown format:
+
+markdown
+Copy
+Edit
+## 2. Install Dependencies
+Navigate to the project folder and install the necessary dependencies:
+
+```bash
+npm install
+3. Setup MongoDB
+Ensure that MongoDB is running on your local machine. Alternatively, you can use a cloud database solution like MongoDB Atlas. If necessary, update the connection URL in the server.js file to match your database setup.
+
+4. Run the Application
+Start the backend server with the following command:
+
+bash
+Copy
+Edit
+npm start
+The backend will be accessible at http://localhost:5000.
+
+API Endpoints
+1. POST /api/patients/add
+Create a new patient record.
+Request Body:
+
+json
+Copy
+Edit
+{
+    "name": "John Doe",
+    "age": 30,
+    "gender": "Male",
+    "diagnosis": "Flu"
+}
+2. GET /api/patients
+Retrieve a list of all patient records.
+Response:
+
+json
+Copy
+Edit
+[
+    {
+        "_id": "5f8d0c5b2b1e6a3d4f3b8c21",
+        "name": "John Doe",
+        "age": 30,
+        "gender": "Male",
+        "diagnosis": "Flu",
+        "admissionDate": "2025-02-02T17:53:11.540Z",
+        "customId": "P-1738520236948-502"
+    }
+]
+3. GET /api/patients/custom/:customId
+Retrieve a specific patient record by their custom ID.
+Example URL:
+
+bash
+Copy
+Edit
+http://localhost:5000/api/patients/custom/P-1738520236948-502
+4. PUT /api/patients/custom/:customId
+Update a patient's details by their custom ID.
+Request Body:
+
+json
+Copy
+Edit
+{
+    "name": "Jane Doe",
+    "age": 32,
+    "gender": "Female",
+    "diagnosis": "Cold"
+}
+5. DELETE /api/patients/:id
+Delete a patient record by their MongoDB generated ID.
+Example URL:
+
+bash
+Copy
+Edit
+http://localhost:5000/api/patients/5f8d0c5b2b1e6a3d4f3b8c21
+vbnet
+Copy
+Edit
+
+This Markdown format will render properly on platforms like GitHub, and it will preserve the code blocks, headings, and other formatting elements.
+
+Let me know if you need further changes!
