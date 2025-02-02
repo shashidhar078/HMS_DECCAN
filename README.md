@@ -26,25 +26,21 @@ The **Hospital Management System (HMS)** is a full-stack application designed to
 ### 1. Clone the Repository
 Clone the project repository to your local machine:
 ```bash git clone <your-repository-url>
-##2. Install Dependencies
+
+###2. Install Dependencies
 Navigate to the project folder and install the necessary dependencies:
 
-```bash
-npm install
-3. Setup MongoDB
+```bash npm install
+###3. Setup MongoDB
 Ensure that MongoDB is running on your local machine. Alternatively, you can use a cloud database solution like MongoDB Atlas. If necessary, update the connection URL in the server.js file to match your database setup.
 
-4. Run the Application
+###4. Run the Application
 Start the backend server with the following command:
-
-bash
-Copy
-Edit
 npm start
 The backend will be accessible at http://localhost:5000.
 
-API Endpoints
-1. POST /api/patients/add
+##API Endpoints
+###1. POST /api/patients/add
 Create a new patient record.
 Request Body:
 
@@ -57,7 +53,7 @@ Edit
     "gender": "Male",
     "diagnosis": "Flu"
 }
-2. GET /api/patients
+###2. GET /api/patients
 Retrieve a list of all patient records.
 Response:
 
@@ -75,7 +71,7 @@ Edit
         "customId": "P-1738520236948-502"
     }
 ]
-3. GET /api/patients/custom/:customId
+###3. GET /api/patients/custom/:customId
 Retrieve a specific patient record by their custom ID.
 Example URL:
 
@@ -83,7 +79,7 @@ bash
 Copy
 Edit
 http://localhost:5000/api/patients/custom/P-1738520236948-502
-4. PUT /api/patients/custom/:customId
+###4. PUT /api/patients/custom/:customId
 Update a patient's details by their custom ID.
 Request Body:
 
@@ -96,5 +92,5 @@ Edit
     "gender": "Female",
     "diagnosis": "Cold"
 }
-5. DELETE /api/patients/:id
+###5. DELETE /api/patients/:id
 
