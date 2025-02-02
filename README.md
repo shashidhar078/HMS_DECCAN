@@ -25,15 +25,8 @@ The **Hospital Management System (HMS)** is a full-stack application designed to
 ## Setup and Installation
 ### 1. Clone the Repository
 Clone the project repository to your local machine:
-```bash
-git clone <your-repository-url>
-
-Here’s the content converted into Markdown format:
-
-markdown
-Copy
-Edit
-## 2. Install Dependencies
+```bash git clone <your-repository-url>
+##2. Install Dependencies
 Navigate to the project folder and install the necessary dependencies:
 
 ```bash
@@ -104,17 +97,4 @@ Edit
     "diagnosis": "Cold"
 }
 5. DELETE /api/patients/:id
-Delete a patient record by their MongoDB generated ID.
-Example URL:
 
-bash
-Copy
-Edit
-http://localhost:5000/api/patients/5f8d0c5b2b1e6a3d4f3b8c21
-vbnet
-Copy
-Edit
-
-This Markdown format will render properly on platforms like GitHub, and it will preserve the code blocks, headings, and other formatting elements.
-
-Let me know if you need further changes!
