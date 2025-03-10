@@ -67,4 +67,4 @@ PUT /api/patients/custom/:customId
 Update a patient's details by custom ID.
 
 DELETE /api/patients/:id
-Delete a patient by their MongoDB generated ID.
+Delete a patient by their MongoDB generated ID. 
