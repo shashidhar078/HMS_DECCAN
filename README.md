@@ -102,5 +102,4 @@ http://localhost:5000/api/patients/5f8d0c5b2b1e6a3d4f3b8c21
 <<<<<<< HEAD
 =======
 DELETE /api/patients/:id
-Delete a patient by their MongoDB generated ID. 
->>>>>>> 66aaa99 (Updated authentication logic and fixed doctor login issue)
+Delete a patient by their MongoDB generated ID.
