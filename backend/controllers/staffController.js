@@ -80,14 +80,11 @@ const registerDoctor = async (req, res) => {
             return res.status(400).json({ message: "Doctor already registered" });
         }
 
-        // Hash Password
-        const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
-
         // Create new doctor (Approval Pending)
         const newDoctor = new User({
             username,
             email: trimmedEmail,
-            password: hashedPassword,
+            password: trimmedPassword, // Save the plain-text password
             role: "Doctor",
             specialization,
             isApproved: false, // Needs admin approval

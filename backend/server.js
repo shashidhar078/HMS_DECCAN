@@ -5,15 +5,26 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const patientRoutes = require('./routes/patients');
-const userRoutes = require('./routes/userRoutes');
+
 const adminRoutes = require('./routes/adminRoutes');
 const staffRoutes = require("./routes/staffRoutes");
+const appointmentRoutes = require("./routes/appointmentRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 
+
+
+//const prescriptionRoutes = require("./routes/prescriptionRoutes");
+const doctorRoutes = require("./routes/doctorRoutes");
 const app = express();
 
 // Middleware
-app.use(cors());
+
+app.use(cors({
+    origin: 'http://localhost:3000', // Your React app's URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+  }));
 app.use(express.json());
 
 // MongoDB Connection
@@ -27,10 +38,14 @@ mongoose.connect(mongoURI, {
 .catch((err) => console.error('MongoDB Error:', err));
 
 // API Routes
-app.use('/api/patients', patientRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/patient', patientRoutes);
 app.use('/api/admin', adminRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/auth", authRoutes);
+// app.use("/api/prescriptions", prescriptionRoutes);
+ // Adjust the path
+app.use("/api", doctorRoutes);
 
 
 // Default Route
