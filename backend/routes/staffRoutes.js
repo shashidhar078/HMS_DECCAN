@@ -1,15 +1,25 @@
 const express = require("express");
-const { registerDoctor, doctorLogin, staffLogin } = require("../controllers/staffController");
+const { 
+    registerDoctor, 
+    doctorLogin, 
+    registerReceptionist, 
+    receptionistLogin,
+    requestPasswordReset,
+    resetPassword
+} = require("../controllers/staffController");
 
 const router = express.Router();
 
-// Staff Login (Doctors, Receptionists, Lab Technicians)
-router.post("/login", staffLogin);
-
-// Doctor Registration (Needs Admin Approval)
+// Doctor routes
 router.post("/register-doctor", registerDoctor);
-
-// Doctor Login (After Approval)
 router.post("/login-doctor", doctorLogin);
+
+// Receptionist routes
+router.post('/register-receptionist', registerReceptionist);
+router.post('/login-receptionist', receptionistLogin);
+
+// Password reset routes
+router.post('/receptionist/forgot-password', requestPasswordReset);
+router.post('/receptionist/reset-password/:token', resetPassword);
 
 module.exports = router;

@@ -10,6 +10,7 @@ const adminLogin = async (req, res) => {
 
         // Find admin in the "users" collection with role "Admin"
         const admin = await User.findOne({ email, role: "Admin" });
+        console.log("Admin from DB:", admin);
 
         if (!admin) {
             return res.status(404).json({ message: "Admin not found" });

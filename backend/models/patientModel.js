@@ -61,13 +61,31 @@ const patientSchema = new mongoose.Schema({
           notes: { type: String }
         }
       ],
-    labReports: [
-        {
-            testName: { type: String },
-            result: { type: String },
-            date: { type: Date, default: Date.now },
-        },
-    ],
+    // Add to your labReports array in patientModel.js
+labReports: [
+    {
+      testName: { 
+        type: String, 
+        required: true 
+      },
+      result: { 
+        type: String 
+      },
+      date: { 
+        type: Date, 
+        default: Date.now 
+      },
+      technician: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      },
+      status: {
+        type: String,
+        enum: ["Pending", "Completed", "Cancelled"],
+        default: "Pending"
+      }
+    }
+  ],
     medications: [
         {
             name: { type: String, required: false },
