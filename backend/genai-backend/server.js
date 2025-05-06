@@ -27,32 +27,31 @@ const upload = multer({ storage });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
-// Function to extract medicine names from text
+// Function to extract medicine names
 const extractDrugsFromText = (text) => {
     const regex = /\b([A-Z][a-z]+(?:mycin|cillin|pril|zole|dipine|olol|caine|sartan|mab|nib)?)\b/g;
     const matches = text.match(regex) || [];
-    const uniqueMatches = [...new Set(matches)];
-    return uniqueMatches;
+    return [...new Set(matches)];
 };
 
-// Function to call Gemini AI with prompt
+// Function to call Gemini
 const fetchDrugDetails = async (medicines) => {
     const prompt = `
-You are a medical assistant. Provide details in JSON format for the following medicines:
-${medicines.join(', ')}
+You are a medical assistant. Return only a JSON array of medicine details.
 
-Format:
+Example:
 [
   {
     "medicine": "Paracetamol",
-    "drugNames": ["Tylenol", "Panadol"],
-    "sideEffects": ["Nausea", "Rash"],
-    "remedies": ["Drink water", "Use antihistamines"],
-    "description": "Used to treat pain and fever.",
-    "precautions": ["Avoid alcohol", "Check liver health"]
-  },
-  ...
+    "sideEffects": [...],
+    "description": "...",
+    "precautions": [...],
+    "dosage": "..."
+  }
 ]
+
+Now return data for:
+${medicines.join(', ')}
 `;
 
     const result = await model.generateContent(prompt);
@@ -60,12 +59,11 @@ Format:
     const text = response.text();
     console.log("🧠 Gemini raw output:", text);
 
-    // Clean JSON if it has ``` markers
     const cleanJson = text.replace(/```(json)?/g, '').trim();
     return JSON.parse(cleanJson);
 };
 
-// Route: Upload PDF and analyze
+// ✅ Route: Upload PDF and analyze (MODIFIED)
 app.post('/api/upload', upload.single('pdf'), async (req, res) => {
     try {
         if (!req.file) {
@@ -80,11 +78,24 @@ app.post('/api/upload', upload.single('pdf'), async (req, res) => {
         }
 
         const drugDetails = await fetchDrugDetails(medicines);
-        res.json({ medicines: drugDetails });
+
+        // 🛠️ Normalize structure: Gemini might return an object instead of an array
+        const finalMedicines = Array.isArray(drugDetails)
+            ? drugDetails
+            : drugDetails.prescribedMedicines || [];
+
+        if (!finalMedicines.length) {
+            return res.status(404).json({ message: 'No medicine details returned' });
+        }
+
+        res.json({ medicines: finalMedicines });
 
     } catch (err) {
         console.error('Upload error:', err);
-        res.status(500).json({ error: 'Failed to process the file or fetch drug info', message: err.message });
+        res.status(500).json({
+            error: 'Failed to process the file or fetch drug info',
+            message: err.message
+        });
     }
 });
 

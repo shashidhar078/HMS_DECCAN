@@ -85,8 +85,13 @@ exports.bookAppointment = async (req, res) => {
     const doctor = await User.findOne({ 
       _id: doctorId, 
       role: "Doctor",
-      isApproved: true 
+      isApproved: true,
+      $or: [
+        { status: { $in: ['Active', 'Approved'] } },
+        { status: { $exists: false } }
+      ]
     });
+    
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found or not approved" });
     }

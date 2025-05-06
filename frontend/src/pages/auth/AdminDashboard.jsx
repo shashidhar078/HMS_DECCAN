@@ -11,7 +11,12 @@ import {
   FaDownload,
   FaFilter,
   FaSun,
-  FaMoon
+  FaMoon,
+  FaHome,
+  FaSearch,
+  FaSort,
+  FaSortUp,
+  FaSortDown
 } from 'react-icons/fa';
 import { 
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
@@ -25,7 +30,25 @@ const AdminDashboard = () => {
     totalUsers: 0,
     pendingApprovals: 0,
     approvedStaff: 0,
-    rejectedStaff: 0
+    rejectedStaff: 0,
+    doctors: {
+      total: 0,
+      pending: 0,
+      approved: 0,
+      rejected: 0
+    },
+    receptionists: {
+      total: 0,
+      pending: 0,
+      approved: 0,
+      rejected: 0
+    },
+    labTechnicians: {
+      total: 0,
+      pending: 0,
+      approved: 0,
+      rejected: 0
+    }
   });
   const [recentUsers, setRecentUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
@@ -36,6 +59,12 @@ const AdminDashboard = () => {
   const [reportRange, setReportRange] = useState('weekly');
   const [pendingOnly, setPendingOnly] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [dialogData, setDialogData] = useState({ type: '', message: '', action: null });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
   const navigate = useNavigate();
 
   // Initialize dark mode from localStorage or system preference
@@ -67,28 +96,11 @@ const AdminDashboard = () => {
         const usersRes = await fetch('/api/admin/users', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const usersData = await usersRes.json();
+        const { users, stats: newStats } = await usersRes.json();
         
-        const pendingRes = await fetch('/api/admin/pending-staff', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const pendingData = await pendingRes.json();
-
-        // Fetch user activity data from your backend
-        const activityRes = await fetch('/api/admin/user-activity', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const activityData = await activityRes.json();
-
-        setStats({
-          totalUsers: usersData.users?.length || 0,
-          pendingApprovals: pendingData.length || 0,
-          approvedStaff: usersData.users?.filter(u => u.isApproved).length || 0,
-          rejectedStaff: usersData.users?.filter(u => u.isRejected).length || 0
-        });
-
-        setRecentUsers(usersData.users?.slice(0, 5) || []);
-        setAllUsers(usersData.users || []);
+        setStats(newStats);
+        setRecentUsers(users.slice(0, 5));
+        setAllUsers(users);
       } catch (error) {
         console.error('Dashboard error:', error);
       } finally {
@@ -104,38 +116,110 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
-  const handleApprove = async (userId) => {
+  const handleApprove = async (userId, role) => {
     try {
       const token = localStorage.getItem('adminToken');
-      await fetch('/api/admin/approve-staff', {
-        method: 'POST',
+      const endpoint = role === 'Doctor' ? '/api/admin/doctors' : '/api/admin/receptionists';
+      const response = await fetch(`${endpoint}/${userId}/approve`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ userId })
+        }
       });
-      window.location.reload();
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to approve user');
+      }
+
+      const data = await response.json();
+      
+      // Show success dialog
+      setDialogData({
+        type: 'success',
+        message: `${role} approved successfully!`,
+        action: async () => {
+          // Refresh the user list
+          const usersRes = await fetch('/api/admin/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const usersData = await usersRes.json();
+          setAllUsers(usersData.users || []);
+          
+          // Update stats
+          setStats(prev => ({
+            ...prev,
+            pendingApprovals: prev.pendingApprovals - 1,
+            approvedStaff: prev.approvedStaff + 1
+          }));
+        }
+      });
+      setShowDialog(true);
     } catch (error) {
       console.error('Approval error:', error);
+      setDialogData({
+        type: 'error',
+        message: error.message || 'Failed to approve user',
+        action: null
+      });
+      setShowDialog(true);
     }
   };
 
-  const handleReject = async (userId) => {
+  const handleReject = async (userId, role) => {
     try {
       const token = localStorage.getItem('adminToken');
-      await fetch('/api/admin/reject-staff', {
-        method: 'POST',
+      const endpoint = role === 'Doctor' ? '/api/admin/doctors' : '/api/admin/receptionists';
+      const response = await fetch(`${endpoint}/${userId}/reject`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ userId })
+        }
       });
-      window.location.reload();
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reject user');
+      }
+
+      const data = await response.json();
+      
+      // Show success dialog
+      setDialogData({
+        type: 'success',
+        message: `${role} rejected successfully!`,
+        action: async () => {
+          // Refresh the user list
+          const usersRes = await fetch('/api/admin/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const usersData = await usersRes.json();
+          setAllUsers(usersData.users || []);
+          
+          // Update stats
+          setStats(prev => ({
+            ...prev,
+            pendingApprovals: prev.pendingApprovals - 1,
+            rejectedStaff: prev.rejectedStaff + 1
+          }));
+        }
+      });
+      setShowDialog(true);
     } catch (error) {
       console.error('Rejection error:', error);
+      setDialogData({
+        type: 'error',
+        message: error.message || 'Failed to reject user',
+        action: null
+      });
+      setShowDialog(true);
     }
+  };
+
+  const handleHome = () => {
+    navigate('/');
   };
 
   const getUserDistributionData = () => {
@@ -198,6 +282,59 @@ const AdminDashboard = () => {
     setDarkMode(!darkMode);
   };
 
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedAndFilteredUsers = () => {
+    let filtered = allUsers;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(user => {
+        if (statusFilter === 'pending') return !user.isApproved && !user.isRejected;
+        if (statusFilter === 'approved') return user.isApproved;
+        if (statusFilter === 'rejected') return user.isRejected;
+        return true;
+      });
+    }
+
+    // Apply date range filter
+    if (dateRange.start && dateRange.end) {
+      filtered = filtered.filter(user => {
+        const userDate = new Date(user.createdAt);
+        const startDate = new Date(dateRange.start);
+        const endDate = new Date(dateRange.end);
+        return userDate >= startDate && userDate <= endDate;
+      });
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+
+    return filtered;
+  };
+
   const filteredUsers = pendingOnly 
     ? (showAllUsers ? allUsers : recentUsers).filter(user => !user.isApproved && !user.isRejected)
     : (showAllUsers ? allUsers : recentUsers);
@@ -225,15 +362,6 @@ const AdminDashboard = () => {
               {darkMode ? <FaSun /> : <FaMoon />}
             </button>
             <button 
-              onClick={() => window.location.reload()}
-              className="text-sm bg-indigo-600 dark:bg-indigo-700 text-white px-4 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition flex items-center gap-2 shadow-sm"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
-            <button 
               onClick={handleLogout}
               className="text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-2 border border-gray-300 dark:border-gray-600 shadow-sm"
             >
@@ -258,7 +386,7 @@ const AdminDashboard = () => {
             icon={<FaUserClock className="text-amber-500 dark:text-amber-400 text-xl" />} 
             title="Pending Approvals" 
             value={stats.pendingApprovals} 
-            change="+3 new"
+            change={`${stats.doctors.pending + stats.receptionists.pending} new`}
             trend="up"
             darkMode={darkMode}
           />
@@ -266,7 +394,7 @@ const AdminDashboard = () => {
             icon={<FaUserCheck className="text-emerald-500 dark:text-emerald-400 text-xl" />} 
             title="Approved Staff" 
             value={stats.approvedStaff} 
-            change="+5%"
+            change={`${stats.doctors.approved + stats.receptionists.approved} total`}
             trend="up"
             darkMode={darkMode}
           />
@@ -274,10 +402,80 @@ const AdminDashboard = () => {
             icon={<FaUserTimes className="text-rose-500 dark:text-rose-400 text-xl" />} 
             title="Rejected Staff" 
             value={stats.rejectedStaff} 
-            change="2 today"
+            change={`${stats.doctors.rejected + stats.receptionists.rejected} total`}
             trend="down"
             darkMode={darkMode}
           />
+        </div>
+
+        {/* Role-specific Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Doctors</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
+                <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.doctors.total}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.doctors.pending}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Approved</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.doctors.approved}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Rejected</p>
+                <p className="text-2xl font-bold text-rose-600 dark:text-rose-400">{stats.doctors.rejected}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Receptionists</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
+                <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.receptionists.total}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.receptionists.pending}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Approved</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.receptionists.approved}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Rejected</p>
+                <p className="text-2xl font-bold text-rose-600 dark:text-rose-400">{stats.receptionists.rejected}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Lab Technicians Card */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lab Technicians</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
+                <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.labTechnicians?.total || 0}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.labTechnicians?.pending || 0}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Approved</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.labTechnicians?.approved || 0}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Rejected</p>
+                <p className="text-2xl font-bold text-rose-600 dark:text-rose-400">{stats.labTechnicians?.rejected || 0}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Charts Row */}
@@ -388,7 +586,7 @@ const AdminDashboard = () => {
         {/* User Management Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-xs`}>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-xs">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
                   {pendingOnly ? 'Pending Approvals' : (showAllUsers ? 'All Users' : 'Recent Users')}
@@ -410,18 +608,91 @@ const AdminDashboard = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Search and Filter Section */}
+              <div className="mb-4 space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                    <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                  </div>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="date"
+                    value={dateRange.start}
+                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  <span className="text-gray-500 dark:text-gray-400">to</span>
+                  <input
+                    type="date"
+                    value={dateRange.end}
+                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                        onClick={() => handleSort('username')}
+                      >
+                        <div className="flex items-center">
+                          Name
+                          {sortConfig.key === 'username' && (
+                            sortConfig.direction === 'asc' ? <FaSortUp className="ml-1" /> : <FaSortDown className="ml-1" />
+                          )}
+                        </div>
+                      </th>
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                        onClick={() => handleSort('role')}
+                      >
+                        <div className="flex items-center">
+                          Role
+                          {sortConfig.key === 'role' && (
+                            sortConfig.direction === 'asc' ? <FaSortUp className="ml-1" /> : <FaSortDown className="ml-1" />
+                          )}
+                        </div>
+                      </th>
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                        onClick={() => handleSort('createdAt')}
+                      >
+                        <div className="flex items-center">
+                          Registered
+                          {sortConfig.key === 'createdAt' && (
+                            sortConfig.direction === 'asc' ? <FaSortUp className="ml-1" /> : <FaSortDown className="ml-1" />
+                          )}
+                        </div>
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredUsers.map((user) => (
+                    {getSortedAndFilteredUsers().map((user) => (
                       <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -442,6 +713,9 @@ const AdminDashboard = () => {
                             {user.role}
                           </span>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                             ${user.isApproved ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 
@@ -454,13 +728,13 @@ const AdminDashboard = () => {
                           {!user.isApproved && !user.isRejected && (
                             <div className="flex space-x-2">
                               <button 
-                                onClick={() => handleApprove(user._id)}
+                                onClick={() => handleApprove(user._id, user.role)}
                                 className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 font-medium"
                               >
                                 Approve
                               </button>
                               <button 
-                                onClick={() => handleReject(user._id)}
+                                onClick={() => handleReject(user._id, user.role)}
                                 className="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-rose-300 font-medium"
                               >
                                 Reject
@@ -561,6 +835,48 @@ const AdminDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Dialog Box */}
+      {showDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl transform transition-all">
+            <div className={`flex items-center justify-center w-12 h-12 mx-auto rounded-full ${
+              dialogData.type === 'success' ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-rose-100 dark:bg-rose-900'
+            }`}>
+              {dialogData.type === 'success' ? (
+                <FaUserCheck className="text-emerald-600 dark:text-emerald-400 text-xl" />
+              ) : (
+                <FaUserTimes className="text-rose-600 dark:text-rose-400 text-xl" />
+              )}
+            </div>
+            <div className="mt-3 text-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                {dialogData.type === 'success' ? 'Success!' : 'Error!'}
+              </h3>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {dialogData.message}
+              </p>
+            </div>
+            <div className="mt-5 flex justify-center gap-4">
+              <button
+                onClick={() => {
+                  setShowDialog(false);
+                  if (dialogData.action) {
+                    dialogData.action();
+                  }
+                }}
+                className={`px-4 py-2 rounded-md text-sm font-medium ${
+                  dialogData.type === 'success'
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    : 'bg-rose-600 text-white hover:bg-rose-700'
+                }`}
+              >
+                {dialogData.type === 'success' ? 'Continue' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

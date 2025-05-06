@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { FaUserShield, FaSignInAlt, FaUserPlus, FaEnvelope, FaPhone, FaLock, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaUserShield, FaSignInAlt, FaUserPlus, FaEnvelope, FaPhone, FaLock, FaCheck, FaTimes, FaHome } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 
 const AuthReceptionist = ({ role = 'Receptionist' }) => {
     const [isLogin, setIsLogin] = useState(true);
@@ -20,7 +20,6 @@ const AuthReceptionist = ({ role = 'Receptionist' }) => {
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
 
-    // Derived password validation state (no need for separate state)
     const passwordValidation = useMemo(() => {
         const { password } = formData;
         return {
@@ -159,37 +158,29 @@ const AuthReceptionist = ({ role = 'Receptionist' }) => {
     }, []);
 
     const PasswordValidationChecklist = useMemo(() => () => (
-        <div className="mt-4 space-y-2 text-sm">
-            <div className={`flex items-center ${passwordValidation.length ? 'text-emerald-500' : 'text-rose-500'}`}>
+        <div className="mt-3 space-y-2 text-xs">
+            <div className={`flex items-center ${passwordValidation.length ? 'text-emerald-500' : 'text-amber-500'}`}>
                 {passwordValidation.length ? <FaCheck className="mr-2" /> : <FaTimes className="mr-2" />}
                 <span>At least 8 characters</span>
             </div>
-            <div className={`flex items-center ${passwordValidation.upperCase ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <div className={`flex items-center ${passwordValidation.upperCase ? 'text-emerald-500' : 'text-amber-500'}`}>
                 {passwordValidation.upperCase ? <FaCheck className="mr-2" /> : <FaTimes className="mr-2" />}
                 <span>At least one uppercase letter</span>
             </div>
-            <div className={`flex items-center ${passwordValidation.lowerCase ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <div className={`flex items-center ${passwordValidation.lowerCase ? 'text-emerald-500' : 'text-amber-500'}`}>
                 {passwordValidation.lowerCase ? <FaCheck className="mr-2" /> : <FaTimes className="mr-2" />}
                 <span>At least one lowercase letter</span>
             </div>
-            <div className={`flex items-center ${passwordValidation.number ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <div className={`flex items-center ${passwordValidation.number ? 'text-emerald-500' : 'text-amber-500'}`}>
                 {passwordValidation.number ? <FaCheck className="mr-2" /> : <FaTimes className="mr-2" />}
                 <span>At least one number</span>
             </div>
-            <div className={`flex items-center ${passwordValidation.specialChar ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <div className={`flex items-center ${passwordValidation.specialChar ? 'text-emerald-500' : 'text-amber-500'}`}>
                 {passwordValidation.specialChar ? <FaCheck className="mr-2" /> : <FaTimes className="mr-2" />}
                 <span>At least one special character</span>
             </div>
         </div>
     ), [passwordValidation]);
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-            </div>
-        );
-    }
 
     if (showForgotPassword) {
         return (
@@ -197,41 +188,67 @@ const AuthReceptionist = ({ role = 'Receptionist' }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-6"
+                className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6 relative overflow-hidden"
             >
-                <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
-                        <h2 className="text-2xl font-bold">Reset Password</h2>
-                        <p className="text-indigo-100">Enter your details to reset password</p>
-                    </div>
+                {/* Luxury decorative elements */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100 rounded-full opacity-20 filter blur-3xl"></div>
+                    <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-purple-100 rounded-full opacity-20 filter blur-3xl"></div>
+                </div>
 
-                    <div className="p-6">
+                {/* Home button */}
+                <button 
+                    onClick={() => navigate('/')}
+                    className="absolute top-6 left-6 z-10 flex items-center space-x-2 bg-white/90 hover:bg-white px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all"
+                >
+                    <FaHome className="text-blue-600" />
+                    <span className="font-medium text-gray-700">Home</span>
+                </button>
+
+                {/* Luxury card container */}
+                <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden relative z-10 border border-gray-200/70">
+                    {/* Premium header with subtle texture */}
+                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-center relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diamond-upholstery.png')]"></div>
+                        <FaUserShield className="mx-auto text-4xl text-white mb-4 drop-shadow-lg" />
+                        <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Reset Password</h1>
+                        <p className="text-blue-100 font-light">
+                            Enter your details to reset your password
+                        </p>
+                    </div>
+                    
+                    <div className="p-8">
                         {error && (
-                            <div className="mb-4 p-3 bg-rose-50 text-rose-700 rounded-lg border-l-4 border-rose-500">
-                                {error}
+                            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg flex items-start">
+                                <svg className="w-5 h-5 text-red-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
+                                </svg>
+                                <p className="text-sm text-red-700">{error}</p>
                             </div>
                         )}
+
                         {success && (
-                            <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg border-l-4 border-emerald-500">
-                                {success}
+                            <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-lg flex items-start">
+                                <svg className="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                <p className="text-sm text-emerald-700">{success}</p>
                             </div>
                         )}
 
                         {!resetToken ? (
                             <>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700 font-medium mb-2">
-                                        Email Address
-                                    </label>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-700 uppercase tracking-wider">Email Address</label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <FaEnvelope className="text-gray-400" />
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                            <FaEnvelope />
                                         </div>
                                         <input
                                             type="email"
                                             value={emailForReset}
                                             onChange={(e) => setEmailForReset(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all"
                                             placeholder="your@email.com"
                                             required
                                         />
@@ -240,50 +257,65 @@ const AuthReceptionist = ({ role = 'Receptionist' }) => {
                                 <button
                                     onClick={handleForgotPassword}
                                     disabled={loading}
-                                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-4 rounded-lg font-medium transition-all duration-300 flex items-center justify-center"
+                                    className="w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-300 flex items-center justify-center shadow-md bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg"
                                 >
                                     {loading ? (
-                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    ) : null}
-                                    Send Reset Link
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Processing...
+                                        </>
+                                    ) : 'Send Reset Link'}
                                 </button>
                             </>
                         ) : (
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-2">
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-700 uppercase tracking-wider">
                                         New Password
+                                        {formData.password && (
+                                            <span className="ml-2 text-xs font-normal">
+                                                {passwordValidation.isValid ? (
+                                                    <span className="text-emerald-500">✓ Strong password</span>
+                                                ) : (
+                                                    <span className="text-amber-500">✗ Requires improvement</span>
+                                                )}
+                                            </span>
+                                        )}
                                     </label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <FaLock className="text-gray-400" />
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                            <FaLock />
                                         </div>
                                         <input
                                             type="password"
                                             name="password"
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all"
                                             placeholder="••••••••"
                                             required
                                         />
                                     </div>
-                                    <PasswordValidationChecklist />
+                                    {formData.password && <PasswordValidationChecklist />}
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={loading || !passwordValidation.isValid}
-                                    className={`w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium transition-all duration-300 ${(loading || !passwordValidation.isValid) ? 'opacity-70 cursor-not-allowed' : 'hover:from-indigo-700 hover:to-purple-700'}`}
+                                    className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-300 flex items-center justify-center shadow-md ${
+                                        loading || !passwordValidation.isValid
+                                            ? 'bg-gray-400 cursor-not-allowed'
+                                            : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg'
+                                    }`}
                                 >
                                     Reset Password
                                 </button>
                             </form>
                         )}
 
-                        <div className="mt-4 text-center">
+                        <div className="mt-6 pt-4 border-t border-gray-200 text-center">
                             <button
                                 onClick={() => {
                                     setShowForgotPassword(false);
@@ -291,7 +323,7 @@ const AuthReceptionist = ({ role = 'Receptionist' }) => {
                                     setError('');
                                     setSuccess('');
                                 }}
-                                className="text-indigo-600 hover:text-indigo-800 font-medium text-sm transition-colors"
+                                className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
                             >
                                 Back to Login
                             </button>
@@ -302,123 +334,141 @@ const AuthReceptionist = ({ role = 'Receptionist' }) => {
         );
     }
 
-    const title = isLogin ? `${role} Login` : `Register ${role}`;
-    const subtitle = isLogin ? 'Sign in to manage patients and appointments' : 'Register as a receptionist';
-
     return (
         <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-6"
+            className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6 relative overflow-hidden"
         >
-            <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
-                    <h2 className="text-2xl font-bold">{title}</h2>
-                    <p className="text-indigo-100">{subtitle}</p>
+            {/* Luxury decorative elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100 rounded-full opacity-20 filter blur-3xl"></div>
+                <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-purple-100 rounded-full opacity-20 filter blur-3xl"></div>
+            </div>
+
+            {/* Home button */}
+            <button 
+                onClick={() => navigate('/')}
+                className="absolute top-6 left-6 z-10 flex items-center space-x-2 bg-white/90 hover:bg-white px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all"
+            >
+                <FaHome className="text-blue-600" />
+                <span className="font-medium text-gray-700">Home</span>
+            </button>
+
+            {/* Luxury card container */}
+            <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden relative z-10 border border-gray-200/70">
+                {/* Premium header with subtle texture */}
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-center relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diamond-upholstery.png')]"></div>
+                    <FaUserShield className="mx-auto text-4xl text-white mb-4 drop-shadow-lg" />
+                    <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">{isLogin ? `${role} Login` : `Register ${role}`}</h1>
+                    <p className="text-blue-100 font-light">
+                        {isLogin ? 'Access your reception dashboard' : 'Join our professional team'}
+                    </p>
                 </div>
-
-                <div className="p-6">
+                
+                {/* Form content */}
+                <div className="p-8">
                     {error && (
-                        <div className="mb-4 p-3 bg-rose-50 text-rose-700 rounded-lg border-l-4 border-rose-500">
-                            {error}
-                        </div>
-                    )}
-                    {success && (
-                        <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg border-l-4 border-emerald-500">
-                            {success}
+                        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg flex items-start">
+                            <svg className="w-5 h-5 text-red-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-sm text-red-700">{error}</p>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    {success && (
+                        <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-lg flex items-start">
+                            <svg className="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-sm text-emerald-700">{success}</p>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         {!isLogin && (
                             <>
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-2">
-                                        Full Name
-                                    </label>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-700 uppercase tracking-wider">Full Name</label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <FaUserShield className="text-gray-400" />
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                            <FaUserShield />
                                         </div>
                                         <input
                                             type="text"
                                             name="username"
                                             value={formData.username}
                                             onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all"
                                             placeholder="John Doe"
                                             required
-                                            minLength="3"
                                         />
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-2">
-                                        Contact Number
-                                    </label>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-700 uppercase tracking-wider">Contact Number</label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <FaPhone className="text-gray-400" />
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                            <FaPhone />
                                         </div>
                                         <input
                                             type="tel"
                                             name="contactNumber"
                                             value={formData.contactNumber}
                                             onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all"
                                             placeholder="+1 (555) 123-4567"
                                             required
-                                            pattern="[0-9]{10,15}"
                                         />
                                     </div>
                                 </div>
                             </>
                         )}
 
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                Email Address
-                            </label>
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700 uppercase tracking-wider">Email Address</label>
                             <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <FaEnvelope className="text-gray-400" />
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                    <FaEnvelope />
                                 </div>
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all"
                                     placeholder="your@email.com"
                                     required
                                 />
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700 uppercase tracking-wider">
                                 Password
                                 {!isLogin && formData.password && (
-                                    <span className="ml-2 text-sm font-normal">
+                                    <span className="ml-2 text-xs font-normal">
                                         {passwordValidation.isValid ? (
-                                            <span className="text-emerald-500">✓ Strong</span>
+                                            <span className="text-emerald-500">✓ Strong password</span>
                                         ) : (
-                                            <span className="text-rose-500">✗ Weak</span>
+                                            <span className="text-amber-500">✗ Requires improvement</span>
                                         )}
                                     </span>
                                 )}
                             </label>
                             <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <FaLock className="text-gray-400" />
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                    <FaLock />
                                 </div>
                                 <input
                                     type="password"
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -430,14 +480,10 @@ const AuthReceptionist = ({ role = 'Receptionist' }) => {
                             <div className="flex justify-end">
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setShowForgotPassword(true);
-                                        setError('');
-                                        setSuccess('');
-                                    }}
-                                    className="text-indigo-600 hover:text-indigo-800 font-medium text-sm transition-colors"
+                                    onClick={() => setShowForgotPassword(true)}
+                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
                                 >
-                                    Forgot Password?
+                                    Forgot password?
                                 </button>
                             </div>
                         )}
@@ -445,28 +491,40 @@ const AuthReceptionist = ({ role = 'Receptionist' }) => {
                         <button
                             type="submit"
                             disabled={loading || (!isLogin && !passwordValidation.isValid)}
-                            className={`w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium transition-all duration-300 flex items-center justify-center ${(loading || (!isLogin && !passwordValidation.isValid)) ? 'opacity-70 cursor-not-allowed' : 'hover:from-indigo-700 hover:to-purple-700'}`}
+                            className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-300 flex items-center justify-center shadow-md ${
+                                loading || (!isLogin && !passwordValidation.isValid)
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg'
+                            }`}
                         >
                             {loading ? (
-                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            ) : null}
-                            {isLogin ? 'Login' : 'Register'}
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processing...
+                                </>
+                            ) : isLogin ? (
+                                <>
+                                    <FaSignInAlt className="mr-2" />
+                                    Sign In
+                                </>
+                            ) : (
+                                <>
+                                    <FaUserPlus className="mr-2" />
+                                    Register
+                                </>
+                            )}
                         </button>
                     </form>
 
-                    <div className="mt-4 text-center">
+                    <div className="mt-6 pt-4 border-t border-gray-200 text-center">
                         <button
-                            onClick={() => {
-                                setIsLogin(!isLogin);
-                                setError('');
-                                setSuccess('');
-                            }}
-                            className="text-indigo-600 hover:text-indigo-800 font-medium text-sm transition-colors"
+                            onClick={() => setIsLogin(!isLogin)}
+                            className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
                         >
-                            {isLogin ? 'Need an account? Register' : 'Already have an account? Sign in'}
+                            {isLogin ? 'Need an account? Register here' : 'Already have an account? Sign in'}
                         </button>
                     </div>
                 </div>

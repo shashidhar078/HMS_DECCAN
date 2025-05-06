@@ -4,6 +4,8 @@ const User = require("../models/userModel"); // Your User model
 const sendEmail = require("../utils/sendEmail"); // Import the function
 const bcrypt=require("bcryptjs");
 const router = express.Router();
+const { authMiddleware } = require('../middlewares/authMiddleware');
+const { Patient } = require('../models/patientModel');
 
 // Request Password Reset (Forgot Password)
 router.post("/forgot-password", async (req, res) => {
@@ -74,6 +76,41 @@ router.post("/reset-password/:token", async (req, res) => {
         console.error(error);
         res.status(500).json({ message: "Server error" });
     }
+});
+
+// Get current user profile
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    let user;
+    if (req.user.role === 'patient') {
+      user = await Patient.findById(req.user.id)
+        .select('-password -otp -otpExpires -otpAttempts');
+    } else {
+      user = await User.findById(req.user.id)
+        .select('-password -resetPasswordToken -resetPasswordExpires');
+    }
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...user.toObject(),
+        role: req.user.role
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching user profile' 
+    });
+  }
 });
 
 module.exports = router;

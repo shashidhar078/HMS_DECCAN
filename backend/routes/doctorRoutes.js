@@ -1,35 +1,57 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { authMiddleware } = require("../middlewares/authMiddleware");
-const User = require("../models/userModel");
-const {
-    getPatientDetails,
-    getNotifications,
-    markNotificationAsRead,
-    clearReadNotifications
-} = require("../controllers/doctorController");
+const doctorController = require('../controllers/doctorController');
+const { verifyToken, restrictTo } = require('../middlewares/authMiddleware');
+const upload = require('../middlewares/uploadMiddleware');
+const User = require('../models/userModel');
+const Appointment = require('../models/appointmentModel');
 
-// Fetch doctors from User model
-router.get("/doctors", async (req, res) => {
-    try {
-        const doctors = await User.find({ role: "Doctor" }).select("-password"); // Exclude password field for security
-        res.status(200).json(doctors);
-    } catch (error) {
-        console.error("Error fetching doctors:", error);
-        res.status(500).json({ message: "Failed to fetch doctors", error: error.message });
+// Protect all routes
+router.use(verifyToken);
+
+// Get available doctors and their time slots
+
+// Prescription routes - keep these at the top
+router.post('/prescriptions/generate', restrictTo('Doctor'), doctorController.generatePrescriptionPDF);
+router.get('/prescriptions', restrictTo('Doctor'), doctorController.getPrescriptions);
+router.get('/prescriptions/:id/download', restrictTo('Doctor'), doctorController.downloadPrescription);
+router.post('/prescriptions', restrictTo('Doctor'), upload.single('prescription'), doctorController.createPrescription);
+router.get('/appointments/latest/:patientId', restrictTo('Doctor'), doctorController.getLatestPatientAppointment);
+
+// Patient APIs
+router.get('/patients', restrictTo('Doctor'), doctorController.getAllPatients);
+router.get('/patients/booked', restrictTo('Doctor'), doctorController.getBookedPatients);
+router.get('/patients/:customId', restrictTo('Doctor'), doctorController.getPatientDetails);
+router.get('/patients/:customId/prescriptions', restrictTo('Doctor'), doctorController.getPatientPrescriptions);
+
+// Notifications
+router.get('/notifications', restrictTo('Doctor'), doctorController.getNotifications);
+router.patch('/notifications/read/:notificationId', restrictTo('Doctor'), doctorController.markNotificationAsRead);
+router.delete('/notifications/clear', restrictTo('Doctor'), doctorController.clearReadNotifications);
+
+// Profile and stats
+router.get('/me', restrictTo('Doctor'), doctorController.getCurrentDoctor);
+router.get('/stats', restrictTo('Doctor'), doctorController.getDoctorStats);
+
+// Appointments
+router.get('/appointments', restrictTo('Doctor'), doctorController.getDoctorAppointments);
+router.put('/appointments/:id/complete', restrictTo('Doctor'), doctorController.completeAppointment);
+
+// Get doctor profile
+router.get('/profile', restrictTo('Doctor'), async (req, res) => {
+  try {
+    const doctor = await User.findById(req.user.id)
+      .select('-password -resetPasswordToken -resetPasswordExpires');
+
+    if (!doctor || doctor.role !== 'Doctor') {
+      return res.status(404).json({ message: 'Doctor not found' });
     }
+
+    res.json(doctor);
+  } catch (error) {
+    console.error('Error fetching doctor profile:', error);
+    res.status(500).json({ message: 'Error fetching doctor profile', error: error.message });
+  }
 });
-
-// Get all doctor notifications
-router.get("/notifications", authMiddleware, getNotifications);
-
-// Mark a notification as read
-router.put("/notifications/read/:notificationId", authMiddleware, markNotificationAsRead);
-
-// Clear all read notifications
-router.delete("/notifications/clear", authMiddleware, clearReadNotifications);
-
-// Fetch patient details
-router.get("/patient/:customId", authMiddleware, getPatientDetails);
 
 module.exports = router;

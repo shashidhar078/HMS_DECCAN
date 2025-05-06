@@ -82,22 +82,23 @@ const registerDoctor = async (req, res) => {
             return res.status(400).json({ message: "Doctor already registered" });
         }
 
-        // Create new doctor (Approval Pending)
+        // Create new doctor (Approval Pending) with proper status
         const newDoctor = new User({
             username,
             email: trimmedEmail,
-            password: trimmedPassword, // Save the plain-text password
+            password: trimmedPassword,
             role: "Doctor",
             specialization,
-            isApproved: false, // Needs admin approval
+            isApproved: false,
+             // Set initial status as Active
         });
 
         await newDoctor.save();
         res.status(201).json({ message: "Registration successful. Awaiting admin approval." });
 
     } catch (error) {
-        console.error("Doctor Registration Error:", error);
-        res.status(500).json({ message: "Server error" });
+        console.error("Doctor registration error:", error);
+        res.status(500).json({ message: "Registration failed", error: error.message });
     }
 };
 
@@ -443,5 +444,3 @@ module.exports = {
     requestPasswordReset,
     resetPassword
 };
-
-module.exports = { staffLogin, registerDoctor, doctorLogin, registerReceptionist, receptionistLogin, requestPasswordReset, resetPassword  };

@@ -1,205 +1,228 @@
-// src/components/PremiumPatientForm.js
-import React, { useState } from 'react';
-import { 
-  FiUser, FiMail, FiPhone, FiCalendar, 
-  FiMapPin, FiPlusCircle, FiSave 
-} from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios"; // Use your configured axios instance
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "../../styles/RegisterPatient.css";
 
 const RegisterPatient = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    contactNumber: '',
-    age: '',
-    gender: '',
-    address: '',
-    emergencyContact: {
-      name: '',
-      relation: '',
-      contactNumber: ''
-    }
+    name: "",
+    email: "",
+    contactNumber: "",
+    otp: Array(6).fill(""),
   });
 
+  const [showOtp, setShowOtp] = useState(false);
+  const [error, setError] = useState("");
+  const [otpResendDisabled, setOtpResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const otpInputRefs = useRef([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let timer;
+    if (otpResendDisabled && resendTimer > 0) {
+      timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    } else if (resendTimer === 0) {
+      setOtpResendDisabled(false);
+      setResendTimer(30);
+    }
+    return () => clearTimeout(timer);
+  }, [otpResendDisabled, resendTimer]);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name.startsWith('emergencyContact.')) {
-      const key = name.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        emergencyContact: { ...prev.emergencyContact, [key]: value }
-      }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError("");
+  };
+
+  const handleOtpChange = (e, index) => {
+    const value = e.target.value;
+    if (isNaN(value)) return;
+
+    const newOtp = [...formData.otp];
+    newOtp[index] = value.substring(value.length - 1);
+    setFormData({ ...formData, otp: newOtp });
+
+    if (value && index < 5 && otpInputRefs.current[index + 1]) {
+      otpInputRefs.current[index + 1].focus();
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log(formData);
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !formData.otp[index] && index > 0) {
+      otpInputRefs.current[index - 1].focus();
+    }
   };
 
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="card bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-6 bg-gradient-to-r from-primary to-secondary text-white">
-          <h2 className="text-2xl font-bold">Register New Patient</h2>
-          <p className="opacity-90">Fill in the patient details below</p>
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    try {
+      // First register the patient
+      const response = await axios.post("/api/patient/register", {
+        name: formData.name,
+        email: formData.email,
+        contactNumber: formData.contactNumber,
+      });
+
+      // Then send OTP
+      await handleSendOtp();
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to register patient. Please check the details.");
+      toast.error(err.response?.data?.message || "Failed to register patient");
+    }
+  };
+
+  const handleSendOtp = async () => {
+    try {
+      const response = await axios.post("/api/patient/send-otp", {
+        contactNumber: formData.contactNumber,
+      });
+      
+      toast.success("OTP sent successfully!");
+      setShowOtp(true);
+      setOtpResendDisabled(true);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to send OTP");
+      toast.error(err.response?.data?.message || "Failed to send OTP");
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      await handleSendOtp();
+      setOtpResendDisabled(true);
+      setResendTimer(30);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to resend OTP");
+      toast.error(err.response?.data?.message || "Failed to resend OTP");
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const otpString = formData.otp.join("");
+    if (otpString.length !== 6) {
+      setError("Please enter a 6-digit OTP");
+      toast.error("Please enter a 6-digit OTP");
+      return;
+    }
+
+    try {
+      const response = await axios.post("/api/patient/verify-otp", {
+        contactNumber: formData.contactNumber,
+        otp: otpString,
+      });
+
+      toast.success("Patient registered successfully!");
+      setRegistrationSuccess(true);
+      
+      // Redirect to receptionist dashboard after 3 seconds
+      setTimeout(() => {
+        navigate("/receptionist/dashboard");
+      }, 3000);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Invalid or expired OTP");
+      toast.error(err.response?.data?.message || "Invalid or expired OTP");
+    }
+  };
+
+  if (registrationSuccess) {
+    return (
+      <div className="register-container">
+        <div className="register-box success-box">
+          <div className="success-icon">✓</div>
+          <h2>Registration Successful!</h2>
+          <p>Patient has been successfully registered.</p>
+          <p>You can now proceed to book appointments.</p>
+          <p>Redirecting to dashboard...</p>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiUser className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Full Name"
-                className="pl-10"
-                required
-              />
-            </div>
+      </div>
+    );
+  }
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMail className="text-gray-400" />
-              </div>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Email Address"
-                className="pl-10"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiPhone className="text-gray-400" />
-              </div>
-              <input
-                type="tel"
-                name="contactNumber"
-                value={formData.contactNumber}
-                onChange={handleChange}
-                placeholder="Contact Number"
-                className="pl-10"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiCalendar className="text-gray-400" />
-              </div>
-              <input
-                type="number"
-                name="age"
-                value={formData.age}
-                onChange={handleChange}
-                placeholder="Age"
-                className="pl-10"
-                min="0"
-                max="120"
-              />
-            </div>
-
-            <div>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full"
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div className="relative md:col-span-2">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMapPin className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="Full Address"
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="flex items-center text-lg font-medium text-gray-800 mb-4">
-              <FiPlusCircle className="mr-2 text-primary" />
-              Emergency Contact
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
+  return (
+    <div className="register-container">
+      <div className="register-box">
+        <h2>Register Patient</h2>
+        <form onSubmit={showOtp ? handleVerifyOtp : handleRegister}>
+          {!showOtp ? (
+            <>
+              <div className="form-group">
+                <label>Name</label>
                 <input
                   type="text"
-                  name="emergencyContact.name"
-                  value={formData.emergencyContact.name}
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
-                  placeholder="Contact Name"
+                  required
                 />
               </div>
-              <div>
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Contact Number</label>
                 <input
                   type="text"
-                  name="emergencyContact.relation"
-                  value={formData.emergencyContact.relation}
+                  name="contactNumber"
+                  value={formData.contactNumber}
                   onChange={handleChange}
-                  placeholder="Relationship"
+                  required
+                  pattern="[0-9]{10}"
+                  maxLength="10"
                 />
               </div>
-              <div>
-                <input
-                  type="tel"
-                  name="emergencyContact.contactNumber"
-                  value={formData.emergencyContact.contactNumber}
-                  onChange={handleChange}
-                  placeholder="Contact Number"
-                />
+            </>
+          ) : (
+            <>
+              <div className="form-group">
+                <label>Enter 6-digit OTP</label>
+                <div className="otp-container">
+                  {formData.otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      maxLength="1"
+                      value={digit}
+                      onChange={(e) => handleOtpChange(e, index)}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      ref={(ref) => (otpInputRefs.current[index] = ref)}
+                      className="otp-input"
+                      required
+                    />
+                  ))}
+                </div>
+                <div className="otp-actions">
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={otpResendDisabled}
+                    className="resend-btn"
+                  >
+                    {otpResendDisabled ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-4 pt-6">
-            <button
-              type="button"
-              className="btn-secondary px-6 py-3"
-              onClick={() => setFormData({
-                name: '',
-                email: '',
-                contactNumber: '',
-                age: '',
-                gender: '',
-                address: '',
-                emergencyContact: { name: '', relation: '', contactNumber: '' }
-              })}
-            >
-              Reset
-            </button>
-            <button
-              type="submit"
-              className="btn-primary px-6 py-3 flex items-center"
-            >
-              <FiSave className="mr-2" />
-              Register Patient
-            </button>
-          </div>
+            </>
+          )}
+          
+          {error && <div className="error-message">{error}</div>}
+          
+          <button type="submit" className="btn-primary">
+            {showOtp ? "Verify OTP" : "Register & Send OTP"}
+          </button>
         </form>
       </div>
     </div>

@@ -1,7 +1,5 @@
-// src/pages/PremiumDashboard.js
-// Add this import at the top of ReceptionistDashboard.jsx
-import React, { useState } from 'react';
-// import React from 'react';
+import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiUserPlus, FiSearch, FiCalendar, FiUsers, 
@@ -11,15 +9,81 @@ import {
 const ReceptionistDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
-
+  const [stats, setStats] = useState({
+    totalPatients: 0,
+    todaysAppointments: 0,
+    pendingActions: 0
+  });
+  const [recentAppointments, setRecentAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   const menuItems = [
     { icon: <FiUserPlus />, label: 'Register Patient', path: '/register-patient' },
     { icon: <FiSearch />, label: 'Search Patient', path: '/search-patient' },
-    { icon: <FiCalendar />, label: 'Appointments', path: '/appointments' },
-    { icon: <FiUsers />, label: 'Patients', path: '/patients' },
-    { icon: <FiClock />, label: 'Today', path: '/today' },
-    { icon: <FiSettings />, label: 'Settings', path: '/settings' },
+    { icon: <FiCalendar />, label: 'Appointments', path: '/book-appointments' },
   ];
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+    
+        const [patientsRes, appointmentsRes] = await Promise.all([
+          axios.get('/patients/count'),
+          axios.get('/appointments', {
+            params: {
+              date: new Date().toISOString().split('T')[0],
+              limit: 5,
+              sort: '-date'
+            }
+          })
+        ]);
+    
+        const appointments = appointmentsRes.data?.data || [];  // <--- Safely fallback to []
+    
+        const pendingActions = appointments.filter(
+          appt => appt.status === 'Pending'
+        ).length;
+    
+        setStats({
+          totalPatients: patientsRes.data.count || 0,
+          todaysAppointments: appointments.length,
+          pendingActions
+        });
+    
+        const formattedAppointments = appointments.map(appt => ({
+          id: appt._id,
+          patientName: appt.patientId?.name || 'N/A',
+          doctorName: appt.doctorId?.username || 'N/A',
+          time: appt.date ? new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+          status: appt.status || 'Unknown'
+        }));
+    
+        setRecentAppointments(formattedAppointments);
+    
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error.message || error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+
+    fetchDashboardData();
+  }, []);
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'Confirmed':
+        return 'bg-green-100 text-green-800';
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-blue-100 text-blue-800';
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -47,7 +111,7 @@ const ReceptionistDashboard = () => {
             </nav>
             <div className="mt-auto">
               <button 
-                onClick={() => navigate('/logout')}
+                onClick={() => navigate('/')}
                 className="flex items-center w-full px-4 py-3 text-white hover:bg-blue-600 rounded-lg transition-all"
               >
                 <FiLogOut className="mr-3" />
@@ -84,116 +148,122 @@ const ReceptionistDashboard = () => {
 
         {/* Dashboard Content */}
         <main className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50 to-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Stats Cards */}
-            <div className="card p-6 bg-white rounded-xl shadow-sm">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-700">Total Patients</h3>
-                <div className="p-3 rounded-full bg-blue-100 text-primary">
-                  <FiUsers className="text-xl" />
-                </div>
-              </div>
-              <p className="mt-4 text-3xl font-bold text-gray-900">1,248</p>
-              <p className="mt-2 text-sm text-green-600">+12% from last month</p>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
-
-            <div className="card p-6 bg-white rounded-xl shadow-sm">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-700">Today's Appointments</h3>
-                <div className="p-3 rounded-full bg-indigo-100 text-secondary">
-                  <FiCalendar className="text-xl" />
-                </div>
-              </div>
-              <p className="mt-4 text-3xl font-bold text-gray-900">24</p>
-              <p className="mt-2 text-sm text-green-600">+2 from yesterday</p>
-            </div>
-
-            <div className="card p-6 bg-white rounded-xl shadow-sm">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-700">Pending Actions</h3>
-                <div className="p-3 rounded-full bg-red-100 text-danger">
-                  <FiClock className="text-xl" />
-                </div>
-              </div>
-              <p className="mt-4 text-3xl font-bold text-gray-900">5</p>
-              <p className="mt-2 text-sm text-red-600">Requires attention</p>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="card col-span-1 md:col-span-2 lg:col-span-3 p-6 bg-white rounded-xl shadow-sm">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button 
-                  onClick={() => navigate('/register-patient')}
-                  className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-primary transition-all"
-                >
-                  <div className="p-3 mb-2 rounded-full bg-blue-100 text-primary">
-                    <FiUserPlus className="text-xl" />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Stats Cards */}
+              <div className="card p-6 bg-white rounded-xl shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-700">Total Patients</h3>
+                  <div className="p-3 rounded-full bg-blue-100 text-primary">
+                    <FiUsers className="text-xl" />
                   </div>
-                  <span className="text-sm font-medium">Register Patient</span>
-                </button>
-                
-                <button 
-                  onClick={() => navigate('/appointments/new')}
-                  className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 hover:border-secondary transition-all"
-                >
-                  <div className="p-3 mb-2 rounded-full bg-indigo-100 text-secondary">
+                </div>
+                <p className="mt-4 text-3xl font-bold text-gray-900">{stats.totalPatients}</p>
+                <p className="mt-2 text-sm text-gray-500">Registered in system</p>
+              </div>
+
+              <div className="card p-6 bg-white rounded-xl shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-700">Today's Appointments</h3>
+                  <div className="p-3 rounded-full bg-indigo-100 text-secondary">
                     <FiCalendar className="text-xl" />
                   </div>
-                  <span className="text-sm font-medium">New Appointment</span>
-                </button>
-                
-                <button 
-                  onClick={() => navigate('/search-patient')}
-                  className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-green-50 hover:border-success transition-all"
-                >
-                  <div className="p-3 mb-2 rounded-full bg-green-100 text-success">
-                    <FiSearch className="text-xl" />
-                  </div>
-                  <span className="text-sm font-medium">Find Patient</span>
-                </button>
-                
-                <button 
-                  onClick={() => navigate('/today')}
-                  className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-purple-50 hover:border-accent transition-all"
-                >
-                  <div className="p-3 mb-2 rounded-full bg-purple-100 text-accent">
+                </div>
+                <p className="mt-4 text-3xl font-bold text-gray-900">{stats.todaysAppointments}</p>
+                <p className="mt-2 text-sm text-gray-500">Scheduled for today</p>
+              </div>
+
+              <div className="card p-6 bg-white rounded-xl shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-700">Pending Actions</h3>
+                  <div className="p-3 rounded-full bg-red-100 text-danger">
                     <FiClock className="text-xl" />
                   </div>
-                  <span className="text-sm font-medium">Today's Schedule</span>
-                </button>
+                </div>
+                <p className="mt-4 text-3xl font-bold text-gray-900">{stats.pendingActions}</p>
+                <p className="mt-2 text-sm text-gray-500">Requires attention</p>
               </div>
-            </div>
 
-            {/* Recent Appointments */}
-            <div className="card col-span-1 md:col-span-2 lg:col-span-3 p-6 bg-white rounded-xl shadow-sm">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">Recent Appointments</h3>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {[1, 2, 3, 4, 5].map((item) => (
-                      <tr key={item} className="hover:bg-gray-50 cursor-pointer">
-                        <td className="px-6 py-4 whitespace-nowrap">John Doe</td>
-                        <td className="px-6 py-4 whitespace-nowrap">Dr. Smith</td>
-                        <td className="px-6 py-4 whitespace-nowrap">10:00 AM</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Confirmed</span>
-                        </td>
+              {/* Quick Actions */}
+              <div className="card col-span-1 md:col-span-2 lg:col-span-3 p-6 bg-white rounded-xl shadow-sm">
+                <h3 className="text-lg font-medium text-gray-700 mb-4">Quick Actions</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <button 
+                    onClick={() => navigate('/register-patient')}
+                    className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-primary transition-all"
+                  >
+                    <div className="p-3 mb-2 rounded-full bg-blue-100 text-primary">
+                      <FiUserPlus className="text-xl" />
+                    </div>
+                    <span className="text-sm font-medium">Register Patient</span>
+                  </button>
+                  
+                  <button 
+                    onClick={() => navigate('/book-appointments')}
+                    className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 hover:border-secondary transition-all"
+                  >
+                    <div className="p-3 mb-2 rounded-full bg-indigo-100 text-secondary">
+                      <FiCalendar className="text-xl" />
+                    </div>
+                    <span className="text-sm font-medium">New Appointment</span>
+                  </button>
+                  
+                  <button 
+                    onClick={() => navigate('/search-patient')}
+                    className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-green-50 hover:border-success transition-all"
+                  >
+                    <div className="p-3 mb-2 rounded-full bg-green-100 text-success">
+                      <FiSearch className="text-xl" />
+                    </div>
+                    <span className="text-sm font-medium">Find Patient</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Recent Appointments */}
+              <div className="card col-span-1 md:col-span-2 lg:col-span-3 p-6 bg-white rounded-xl shadow-sm">
+                <h3 className="text-lg font-medium text-gray-700 mb-4">Recent Appointments</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {recentAppointments.length > 0 ? (
+                        recentAppointments.map((appointment) => (
+                          <tr key={appointment.id} className="hover:bg-gray-50 cursor-pointer">
+                            <td className="px-6 py-4 whitespace-nowrap">{appointment.patientName}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{appointment.doctorName}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{appointment.time}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
+                                {appointment.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                            No recent appointments found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </main>
       </div>
     </div>

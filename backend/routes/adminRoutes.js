@@ -1,6 +1,19 @@
 const express = require("express");
 const { verifyAdmin } = require("../middlewares/authMiddleware");
-const { adminLogin, getPendingStaff, approveStaff, rejectStaff , getAllUsers } = require("../controllers/adminController");
+const { 
+  adminLogin, 
+  getPendingStaff, 
+  approveStaff, 
+  rejectStaff, 
+  getAllUsers, 
+  registerStaff, 
+  approveDoctor, 
+  rejectDoctor, 
+  approveReceptionist, 
+  rejectReceptionist,
+  approveLabTechnician,
+  rejectLabTechnician 
+} = require("../controllers/adminController");
 
 const router = express.Router();
 
@@ -9,6 +22,15 @@ router.get("/pending-staff", getPendingStaff);
 router.post("/approve-staff", approveStaff);
 router.post("/reject-staff", rejectStaff);
 router.get("/users", verifyAdmin, getAllUsers);
+router.post("/register-staff", verifyAdmin, registerStaff);
+router.put("/staff/:id/approve", verifyAdmin, approveStaff);
+router.put("/staff/:id/reject", verifyAdmin, rejectStaff);
+router.put("/doctors/:id/approve", verifyAdmin, approveDoctor);
+router.put("/doctors/:id/reject", verifyAdmin, rejectDoctor);
+router.put("/receptionists/:id/approve", verifyAdmin, approveReceptionist);
+router.put("/receptionists/:id/reject", verifyAdmin, rejectReceptionist);
+router.put("/lab-technicians/:id/approve", verifyAdmin, approveLabTechnician);
+router.put("/lab-technicians/:id/reject", verifyAdmin, rejectLabTechnician);
 // User activity data endpoint
 router.get('/user-activity', verifyAdmin, async (req, res) => {
     try {

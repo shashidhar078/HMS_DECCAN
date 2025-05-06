@@ -8,35 +8,62 @@ const patientSchema = new mongoose.Schema({
     },
     name: {
         type: String,
-        required: true,
+        required: [true, "Name is required"],
+        trim: true,
+        minlength: [2, "Name must be at least 2 characters long"],
+        maxlength: [50, "Name cannot exceed 50 characters"]
     },
     email: {
         type: String,
         unique: true,
-        required: true,
+        required: [true, "Email is required"],
+        trim: true,
+        lowercase: true,
+        match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Please enter a valid email address"]
     },
     contactNumber: {
         type: String,
         unique: true,
-        required: true,
+        required: [true, "Contact number is required"],
+        match: [/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"]
     },
     age: {
         type: Number,
         required: false,
+        min: [0, "Age cannot be negative"],
+        max: [120, "Age cannot exceed 120 years"]
     },
     gender: {
         type: String,
-        enum: ["Male", "Female", "Other"],
-        required: false,
+        enum: {
+            values: ["Male", "Female", "Other"],
+            message: "Gender must be either Male, Female, or Other"
+        },
+        required: false
     },
     address: {
         type: String,
         required: false,
+        trim: true,
+        maxlength: [200, "Address cannot exceed 200 characters"]
     },
     emergencyContact: {
-        name: { type: String, required: false },
-        relation: { type: String, required: false },
-        contactNumber: { type: String, required: false },
+        name: { 
+            type: String, 
+            required: false,
+            trim: true,
+            minlength: [2, "Emergency contact name must be at least 2 characters long"]
+        },
+        relation: { 
+            type: String, 
+            required: false,
+            trim: true
+        },
+        contactNumber: { 
+            type: String, 
+            required: false,
+            match: [/^[0-9]{10}$/, "Please enter a valid 10-digit emergency contact number"]
+        }
     },
     admissionDate: {
         type: Date,
@@ -52,40 +79,42 @@ const patientSchema = new mongoose.Schema({
     diagnosis: {
         type: String,
     },
-    medicalHistory: [
-        {
-          date: { type: Date, default: Date.now },
-          doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-          diagnosis: { type: String },
-          prescriptions: { type: String }, // Stores PDF filename
-          notes: { type: String }
+    medicalHistory: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {
+            appointments: [],
+            prescriptions: [],
+            labReports: [],
+            allergies: [],
+            conditions: [],
+            medications: []
         }
-      ],
+    },
     // Add to your labReports array in patientModel.js
-labReports: [
-    {
-      testName: { 
-        type: String, 
-        required: true 
-      },
-      result: { 
-        type: String 
-      },
-      date: { 
-        type: Date, 
-        default: Date.now 
-      },
-      technician: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-      },
-      status: {
-        type: String,
-        enum: ["Pending", "Completed", "Cancelled"],
-        default: "Pending"
-      }
-    }
-  ],
+    labReports: [
+        {
+            testName: { 
+                type: String, 
+                required: true 
+            },
+            result: { 
+                type: String 
+            },
+            date: { 
+                type: Date, 
+                default: Date.now 
+            },
+            technician: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User"
+            },
+            status: {
+                type: String,
+                enum: ["Pending", "Completed", "Cancelled"],
+                default: "Pending"
+            }
+        }
+    ],
     medications: [
         {
             name: { type: String, required: false },
@@ -119,11 +148,43 @@ labReports: [
     
     otp: {
         type: String,
-        required: false,
+        required: false
     },
     otpExpiry: {
         type: Date,
-        required: false,
+        required: false
+    },
+    otpAttempts: {
+        type: Number,
+        default: 0
+    },
+    lastOtpSent: {
+        type: Date,
+        required: false
+    },
+    notifications: [{
+        message: {
+            type: String,
+            required: true
+        },
+        type: {
+            type: String,
+            enum: ['appointment', 'prescription', 'lab', 'general'],
+            default: 'general'
+        },
+        read: {
+            type: Boolean,
+            default: false
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    bloodGroup: {
+        type: String,
+        enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+        required: false
     },
 });
 

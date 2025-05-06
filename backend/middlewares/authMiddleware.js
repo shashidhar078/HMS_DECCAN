@@ -31,7 +31,8 @@ exports.verifyAdmin = (req, res, next) => {
         res.status(401).json({ message: "Invalid token" });
     }
 };
-// authMiddleware.js (add this to your existing file)
+
+// Middleware to verify ONLY receptionists
 exports.verifyReceptionist = (req, res, next) => {
     const token = req.header("Authorization")?.split(" ")[1];
     if (!token) return res.status(403).json({ message: "No token provided" });
@@ -48,23 +49,45 @@ exports.verifyReceptionist = (req, res, next) => {
     }
 };
 
+// Middleware to verify ONLY lab technicians
 exports.verifyLabTechnician = (req, res, next) => {
     const token = req.header("Authorization")?.split(" ")[1];
-    if (!token) {
-      return res.status(403).json({ message: "No token provided" });
-    }
-  
+    if (!token) return res.status(403).json({ message: "No token provided" });
+
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded.role !== "LabTechnician") {
-        return res.status(403).json({ 
-          message: "Lab technician access required" 
-        });
-      }
-      req.user = decoded; // Attach user data to request
-      next();
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.role !== "Lab Technician") {
+            return res.status(403).json({ message: "Lab Technician access required" });
+        }
+        req.user = decoded;
+        next();
     } catch (error) {
-      console.error("Token verification error:", error);
-      res.status(401).json({ message: "Invalid or expired token" });
+        res.status(401).json({ message: "Invalid token" });
     }
-  };
+};
+
+// Middleware to verify token (general purpose)
+exports.verifyToken = (req, res, next) => {
+    const token = req.header("Authorization")?.split(" ")[1];
+    if (!token) return res.status(403).json({ message: "No token provided" });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        res.status(401).json({ message: "Invalid token" });
+    }
+};
+
+// Role restriction middleware
+exports.restrictTo = (...roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
+                message: `You do not have permission to perform this action`
+            });
+        }
+        next();
+    };
+};

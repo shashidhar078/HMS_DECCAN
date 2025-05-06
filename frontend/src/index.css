@@ -55,7 +55,7 @@
 
 /* Glassmorphism Effect */
 .glass {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(26, 26, 46, 0.85); /* Match --dark color with transparency */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.18);
