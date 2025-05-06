@@ -68,6 +68,16 @@ JWT for secure access control
 
 Bcrypt for password hashing
 
+- Clone the repo with LFS enabled:
+git clone --recursive https://github.com/shashidhar078/HMS_DECCAN.git
+- Ensure LFS is installed:
+git lfs install
+- Pull LFS-tracked files
+git lfs pull
+After doing this, the actual files should be accessible on your local machine.
+Would you like to stop using Git LFS for certain files? Let me know, and I can guide you! 🚀
+
+
 📁 Folder Structure (Simplified)
 bash
 Copy
