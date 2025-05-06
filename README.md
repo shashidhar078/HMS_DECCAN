@@ -1,105 +1,120 @@
-# Hospital Management System (HMS)
+Hospital Management System
+A comprehensive, full-stack web-based Hospital Management System designed to streamline patient care, administrative processes, and communication between staff and patients. This system supports multi-role access and integrates AI-assisted features to improve healthcare delivery.
 
-## Description
-The **Hospital Management System (HMS)** is a full-stack application designed to manage patient information, appointments, and medical records in a hospital setting. The system allows administrators, doctors, receptionists, and lab technicians to manage data efficiently. This system uses MongoDB for database management and Node.js with Express.js for the backend.
+🏥 Project Overview
+This system facilitates seamless interaction across various user roles:
 
-## Technologies Used
-<ul>
-    <li><strong>Node.js</strong>: JavaScript runtime for the server-side code.</li>
-    <li><strong>Express.js</strong>: Web framework for building RESTful APIs.</li>
-    <li><strong>MongoDB</strong>: NoSQL database to store patient and other hospital-related data.</li>
-    <li><strong>Mongoose</strong>: ODM for MongoDB to interact with the database.</li>
-    <li><strong>CORS</strong>: Middleware to handle cross-origin requests.</li>
-    <li><strong>Body-Parser</strong>: Middleware to parse incoming request bodies.</li>
-</ul>
+Admin: Full access to manage hospital operations.
 
-## Features
-<ul>
-    <li><strong>Role-Based Access Control</strong>: Different user roles (Admin, Doctor, Receptionist, Lab Technician) with specific permissions.</li>
-    <li><strong>CRUD Operations</strong>: Perform Create, Read, Update, and Delete operations on patient data.</li>
-    <li><strong>Custom Patient ID</strong>: Each patient has a unique custom ID generated based on timestamp and random number.</li>
-    <li><strong>Patient Management</strong>: Admin can manage doctors, receptionists, and lab technicians, while doctors can add diagnoses and prescriptions for patients.</li>
-    <li><strong>RESTful API</strong>: Exposes endpoints to interact with the system, including the ability to manage patients and view patient details using a custom ID.</li>
-</ul>
+Doctors: View assigned patients, prescribe medications, request lab tests.
 
-2. Install Dependencies
-Navigate to the project folder and install the necessary dependencies:
+Receptionists: Register patients and manage appointments.
+
+Lab Technicians: Process and update lab test reports.
+
+Patients: Book appointments, access prescriptions/lab reports, and receive AI-powered assistance.
+
+🔐 Authentication & Authorization
+Role-based login system using JWT tokens.
+
+Admin approval workflow for staff registration.
+
+Patient login via OTP (no traditional registration).
+
+Password hashing implemented using bcrypt for security.
+
+🤖 Gen AI Features
+An AI assistant supports patients with:
+
+Medicine name suggestions
+
+Side effect details
+
+Home remedy recommendations
+
+📋 Key Features
+Responsive, modern UI built with Tailwind CSS.
+
+Admin-controlled access to patient and hospital data.
+
+Patient-specific dashboards for prescriptions, reports, and notifications.
+
+Integrated notification system for appointments and approvals.
+
+Search functionality using unique Patient IDs.
+
+🛠️ Tech Stack
+Frontend:
+
+React.js
+
+Tailwind CSS
+
+Axios
+
+Backend:
+
+Node.js
+
+Express.js
+
+MongoDB (Mongoose)
+
+Others:
+
+Twilio API for OTP delivery
+
+JWT for secure access control
+
+Bcrypt for password hashing
+
+📁 Folder Structure (Simplified)
+bash
+Copy
+Edit
+/frontend
+  └── src
+      └── components
+      └── pages
+/backend
+  └── routes
+  └── controllers
+  └── middlewares
+  └── models
+🧪 How to Run Locally
+Clone the repository
 
 bash
 Copy
 Edit
-npm install
-3. Setup MongoDB
-Ensure that MongoDB is running on your local machine. Alternatively, you can use a cloud database solution like MongoDB Atlas. If necessary, update the connection URL in the server.js file to match your database setup.
-
-4. Run the Application
-Start the backend server with the following command:
+git clone https://github.com/your-username/hospital-management-system.git
+cd hospital-management-system
+Install dependencies
 
 bash
 Copy
 Edit
-npm start
-The backend will be accessible at http://localhost:5000.
+npm install        # For backend
+cd frontend
+npm install        # For frontend
+cd genai-backend  #For genai-backend
+Configure environment variables
 
-API Endpoints
-1. POST /api/patients/add
-Create a new patient record. Request Body:
+Add .env files in both root and /client if needed for API keys, DB URI, etc.
 
-json
-Copy
-Edit
-{
-    "name": "John Doe",
-    "age": 30,
-    "gender": "Male",
-    "diagnosis": "Flu"
-}
-2. GET /api/patients
-Retrieve a list of all patient records.
-
-json
-Copy
-Edit
-[
-    {
-        "_id": "5f8d0c5b2b1e6a3d4f3b8c21",
-        "name": "John Doe",
-        "age": 30,
-        "gender": "Male",
-        "diagnosis": "Flu",
-        "admissionDate": "2025-02-02T17:53:11.540Z",
-        "customId": "P-1738520236948-502"
-    }
-]
-3. GET /api/patients/custom/:customId
-Retrieve a specific patient record by their custom ID. Example URL:
+Run the app
 
 bash
 Copy
 Edit
-http://localhost:5000/api/patients/custom/P-1738520236948-502
-4. PUT /api/patients/custom/:customId
-Update a patient's details by their custom ID. Request Body:
+npm run dev        # For backend
+cd frontend
+npm run dev          # For frontend
+npm run dev            #for genai-backend
 
-json
-Copy
-Edit
-{
-    "name": "Jane Doe",
-    "age": 32,
-    "gender": "Female",
-    "diagnosis": "Cold"
-}
-5. DELETE /api/patients/:id
-Delete a patient record by their MongoDB generated ID. Example URL:
+✅ Status
+✔️ Completed for academic submission
+📈 Future Scope: AI model enhancement, patient history analysis, appointment analytics
 
-bash
-Copy
-Edit
-http://localhost:5000/api/patients/5f8d0c5b2b1e6a3d4f3b8c21
-
-
-<<<<<<< HEAD
-=======
-DELETE /api/patients/:id
-Delete a patient by their MongoDB generated ID.
+📣 Acknowledgments
+Developed as a part of 4th-semester mini project by [Shashidhar Nagunuri] and [Vigneshwar male]
