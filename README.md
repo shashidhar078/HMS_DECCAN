@@ -1,9 +1,7 @@
 Hospital Management System
 A comprehensive, full-stack web-based Hospital Management System designed to streamline patient care, administrative processes, and communication between staff and patients. This system supports multi-role access and integrates AI-assisted features to improve healthcare delivery.
 
-<<<<<<< HEAD
 <div align="center">
-  <img src="screenshots/logo.png" alt="HMS Logo" width="200"/>
   
   [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
   [![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
