@@ -233,7 +233,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-- Your Name - Initial work - [shashidhar078](https://github.com/shashidhar078)
+-Initial work - [shashidhar078](https://github.com/shashidhar078)
 
 ## 🎉 Acknowledgments
 
