@@ -1,5 +1,7 @@
-# Hospital Management System (HMS)
+Hospital Management System
+A comprehensive, full-stack web-based Hospital Management System designed to streamline patient care, administrative processes, and communication between staff and patients. This system supports multi-role access and integrates AI-assisted features to improve healthcare delivery.
 
+<<<<<<< HEAD
 <div align="center">
   <img src="screenshots/logo.png" alt="HMS Logo" width="200"/>
   
@@ -245,3 +247,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
   Made with ❤️ by [Shashidhar Nagunuri]
 </div>
+
